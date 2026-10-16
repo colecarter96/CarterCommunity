@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f3f1ea;
+  --foreground: #161616;
+  --muted: #6d6860;
+  --line: #ddd6c8;
+  --accent: #244ddb;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-geist-sans);
+  --font-accent: var(--font-comico);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.font-accent {
+  font-family: var(--font-comico), var(--font-sans), sans-serif;
+}
+
+::selection {
+  background: #244ddb;
+  color: #f3f1ea;
+}
+
+:focus-visible {
+  outline: 1px solid #244ddb;
+  outline-offset: 3px;
+}
+
+html[data-opening],
+html[data-opening] body {
+  overflow: hidden;
+}
+
+html[data-opening] #site-mark {
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  .nudge {
+    transition: transform 180ms ease;
+  }
+
+  .group:hover .nudge,
+  .group:focus-visible .nudge {
+    transform: translate(2px, -2px);
+  }
+
+  .dialog-in {
+    animation: rise 160ms ease;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
