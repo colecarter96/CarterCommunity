@@ -1,10 +1,15 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { get, put } from "@vercel/blob";
+import bundledPosts from "../../data/posts.json";
 import { isPostFont } from "@/lib/fonts";
 import { isHttpUrl } from "@/lib/format";
 import { sortPosts, type Post } from "@/lib/posts";
 
 const filePath = path.join(process.cwd(), "data", "posts.json");
+const blobPath = "posts.json";
+const saveError =
+  "This note could not be saved. In Vercel, create a private Blob store, connect it to this project, and redeploy.";
 
 function normalizePost(value: unknown): Post | null {
   if (!value || typeof value !== "object") return null;
@@ -34,23 +39,71 @@ function normalizePost(value: unknown): Post | null {
   return post;
 }
 
-export async function readPosts(): Promise<Post[]> {
-  try {
-    const raw = await readFile(filePath, "utf8");
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return sortPosts(parsed.flatMap((item) => {
+function postsFromUnknown(value: unknown): Post[] {
+  if (!Array.isArray(value)) return [];
+  return sortPosts(
+    value.flatMap((item) => {
       const post = normalizePost(item);
       return post ? [post] : [];
-    }));
+    }),
+  );
+}
+
+function blobConfigured() {
+  return Boolean(process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN);
+}
+
+async function readFilePosts(): Promise<Post[]> {
+  try {
+    const raw = await readFile(filePath, "utf8");
+    return postsFromUnknown(JSON.parse(raw));
   } catch {
-    return [];
+    return postsFromUnknown(bundledPosts);
   }
 }
 
+/** Null means the store is connected and this file has not been created yet. */
+async function readBlobPosts(): Promise<Post[] | null> {
+  const result = await get(blobPath, { access: "private", useCache: false });
+  if (!result || result.statusCode !== 200 || !result.stream) return null;
+  const raw = await new Response(result.stream).text();
+  return postsFromUnknown(JSON.parse(raw));
+}
+
+async function writeBlobPosts(posts: Post[]) {
+  await put(blobPath, `${JSON.stringify(posts, null, 2)}\n`, {
+    access: "private",
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType: "application/json",
+  });
+}
+
+export async function readPosts(): Promise<Post[]> {
+  if (!blobConfigured()) return readFilePosts();
+  try {
+    const stored = await readBlobPosts();
+    if (stored !== null) return stored;
+  } catch {
+    // The store is not reachable yet. Show the notes shipped with this deploy.
+  }
+  return readFilePosts();
+}
+
 export async function writePosts(posts: Post[]) {
+  const sorted = sortPosts(posts);
+  if (blobConfigured()) {
+    try {
+      await readBlobPosts();
+      await writeBlobPosts(sorted);
+      return;
+    } catch {
+      throw new Error(saveError);
+    }
+  }
+  if (process.env.VERCEL) throw new Error(saveError);
   await mkdir(path.dirname(filePath), { recursive: true });
-  await writeFile(filePath, `${JSON.stringify(sortPosts(posts), null, 2)}\n`, "utf8");
+  await writeFile(filePath, `${JSON.stringify(sorted, null, 2)}\n`, "utf8");
 }
 
 export type PostInput = {

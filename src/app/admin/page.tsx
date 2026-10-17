@@ -17,7 +17,7 @@ async function AdminDesk() {
       <div className="max-w-md py-16">
         <h1 className="text-3xl font-semibold tracking-[-0.04em]">Edit</h1>
         <p className="mt-4 text-sm leading-6 text-muted">
-          Add ADMIN_PASSWORD to .env.local, then restart the server.
+          Add ADMIN_PASSWORD to the environment variables, then restart or redeploy.
         </p>
       </div>
     );

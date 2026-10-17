@@ -13,6 +13,18 @@ async function requireAdmin(): Promise<FormState | null> {
   return { error: "Sign in again." };
 }
 
+async function persist(posts: Post[]): Promise<FormState> {
+  try {
+    await writePosts(posts);
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "The note could not be saved.",
+    };
+  }
+  updateTag("posts");
+  return null;
+}
+
 export async function login(_prev: FormState, formData: FormData): Promise<FormState> {
   const attempt = String(formData.get("password") ?? "");
   const signedIn = await signIn(attempt);
@@ -38,8 +50,8 @@ export async function createPost(_prev: FormState, formData: FormData): Promise<
     createdAt: new Date().toISOString(),
     ...parsed.value,
   };
-  await writePosts([post, ...posts]);
-  updateTag("posts");
+  const failure = await persist([post, ...posts]);
+  if (failure) return failure;
   return { ok: true };
 }
 
@@ -61,15 +73,16 @@ export async function updatePost(_prev: FormState, formData: FormData): Promise<
     createdAt: current.createdAt,
     ...parsed.value,
   };
-  await writePosts(posts);
-  updateTag("posts");
+  const failure = await persist(posts);
+  if (failure) return failure;
   return { ok: true };
 }
 
-export async function deletePost(formData: FormData) {
-  if (!(await isAdmin())) return;
+export async function deletePost(_prev: FormState, formData: FormData): Promise<FormState> {
+  if (!(await isAdmin())) return { error: "Sign in again." };
   const id = String(formData.get("id") ?? "");
   const posts = await readPosts();
-  await writePosts(posts.filter((post) => post.id !== id));
-  updateTag("posts");
+  const failure = await persist(posts.filter((post) => post.id !== id));
+  if (failure) return failure;
+  return { ok: true };
 }

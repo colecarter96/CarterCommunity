@@ -180,6 +180,10 @@ function NewPost() {
 
 function ExistingPost({ post }: { post: Post }) {
   const [state, action, pending] = useActionState<FormState, FormData>(updatePost, null);
+  const [removeState, removeAction, removePending] = useActionState<FormState, FormData>(
+    deletePost,
+    null,
+  );
   const [author, setAuthor] = useState(post.author ?? "");
   const [body, setBody] = useState(post.body);
   const [font, setFont] = useState<PostFontId>(
@@ -221,15 +225,24 @@ function ExistingPost({ post }: { post: Post }) {
         </button>
       </form>
       <form
-        action={deletePost}
+        action={removeAction}
         className="mt-3"
         onSubmit={(event) => {
           if (!confirm("Remove this post?")) event.preventDefault();
         }}
       >
         <input type="hidden" name="id" value={post.id} />
-        <button type="submit" className="text-[11px] tracking-[0.16em] text-muted uppercase">
-          Remove
+        {removeState?.error ? (
+          <p role="alert" className="mb-3 text-sm text-accent">
+            {removeState.error}
+          </p>
+        ) : null}
+        <button
+          type="submit"
+          disabled={removePending}
+          className="text-[11px] tracking-[0.16em] text-muted uppercase disabled:opacity-50"
+        >
+          {removePending ? "Removing" : "Remove"}
         </button>
       </form>
     </article>
