@@ -8,8 +8,7 @@ export const site = {
   description:
     "What we're making, where we're going, and the people we meet along the way.",
   joinUrl: "",
-  /** Paste the Discord invite here once the server exists. */
-  discordUrl: "",
+  discordUrl: "https://discord.gg/r6aM2TYBG6",
   socials: [
     { label: "YouTube", href: "" },
     { label: "TikTok", href: "" },
