@@ -1,12 +1,14 @@
 "use server";
 
-import { updateTag } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { isAdmin, signIn, signOut } from "@/lib/auth";
+import { readEmails, writeEmails } from "@/lib/emails";
 import { parsePostForm, readPosts, writePosts } from "@/lib/store";
 import type { Post } from "@/lib/posts";
 
 export type FormState = { error?: string; ok?: boolean } | null;
+export type SubscribeState = { error?: string; ok?: boolean } | null;
 
 async function requireAdmin(): Promise<FormState | null> {
   if (await isAdmin()) return null;
@@ -84,5 +86,42 @@ export async function deletePost(_prev: FormState, formData: FormData): Promise<
   const posts = await readPosts();
   const failure = await persist(posts.filter((post) => post.id !== id));
   if (failure) return failure;
+  return { ok: true };
+}
+
+export async function subscribe(_prev: SubscribeState, formData: FormData): Promise<SubscribeState> {
+  if (String(formData.get("company") ?? "").trim()) return { ok: true };
+
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+    return { error: "That email doesn't look right." };
+  }
+
+  const list = await readEmails();
+  if (list.some((item) => item.email === email)) return { ok: true };
+
+  try {
+    await writeEmails([{ email, createdAt: new Date().toISOString() }, ...list]);
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "That email could not be saved.",
+    };
+  }
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
+export async function removeEmail(_prev: FormState, formData: FormData): Promise<FormState> {
+  if (!(await isAdmin())) return { error: "Sign in again." };
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const list = await readEmails();
+  try {
+    await writeEmails(list.filter((item) => item.email !== email));
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "That address could not be removed.",
+    };
+  }
+  revalidatePath("/admin");
   return { ok: true };
 }

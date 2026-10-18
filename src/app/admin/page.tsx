@@ -2,7 +2,9 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { AdminEditor } from "@/components/admin-editor";
 import { AdminLogin } from "@/components/admin-login";
+import { EmailList } from "@/components/email-list";
 import { adminConfigured, isAdmin } from "@/lib/auth";
+import { readEmails } from "@/lib/emails";
 import { readPosts } from "@/lib/store";
 import { shell } from "@/lib/site";
 
@@ -37,10 +39,11 @@ async function AdminDesk() {
     );
   }
 
-  const posts = await readPosts();
+  const [posts, emails] = await Promise.all([readPosts(), readEmails()]);
   return (
     <div className="py-12">
       <AdminEditor posts={posts} />
+      <EmailList emails={emails} />
     </div>
   );
 }

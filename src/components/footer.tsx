@@ -1,4 +1,5 @@
 import { DiscordLink } from "@/components/discord-link";
+import { EmailSignup } from "@/components/email-signup";
 import { configuredHref, shell, site } from "@/lib/site";
 
 export function Footer() {
@@ -12,11 +13,14 @@ export function Footer() {
 
   return (
     <footer className="mt-auto border-t border-line">
-      <div className={`${shell} flex flex-col gap-6 py-10 sm:flex-row sm:items-end sm:justify-between`}>
-        <p className="max-w-sm text-[13px] font-semibold tracking-[0.14em] uppercase">
+      <div className={`${shell} flex flex-col gap-8 py-10 sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] sm:items-start sm:gap-x-12 sm:gap-y-8`}>
+        <p className="max-w-sm text-[13px] font-semibold tracking-[0.14em] uppercase sm:col-start-1 sm:row-start-1">
           Make something. Meet someone. Go do it.
         </p>
-        <ul className="flex flex-wrap gap-x-5 gap-y-2">
+        <div className="sm:col-start-2 sm:row-start-1 sm:justify-self-end">
+          <EmailSignup />
+        </div>
+        <ul className="flex flex-wrap gap-x-5 gap-y-2 sm:col-start-1 sm:row-start-2 sm:max-w-xl">
           {links.map((link) => (
             <li key={link.label}>
               <a

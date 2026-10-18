@@ -10,8 +10,10 @@ export const site = {
   joinUrl: "",
   discordUrl: "https://discord.gg/r6aM2TYBG6",
   socials: [
-    { label: "YouTube", href: "" },
-    { label: "TikTok", href: "" },
+    { label: "YouTube", href: "https://www.youtube.com/@bryceandcolecarter" },
+    { label: "TikTok", href: "https://www.tiktok.com/@bryce.cole.carter" },
+    { label: "TikTok Bryce", href: "https://www.tiktok.com/@b_ricee" },
+    { label: "TikTok Cole", href: "https://www.tiktok.com/@colecartr" },
     { label: "Substack", href: "" },
   ],
 };
