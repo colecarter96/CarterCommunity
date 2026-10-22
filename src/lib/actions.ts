@@ -4,11 +4,14 @@ import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { isAdmin, signIn, signOut } from "@/lib/auth";
 import { readEmails, writeEmails } from "@/lib/emails";
+import { ensureVisitorId } from "@/lib/heart-visitor";
+import { readHeartMap, writeHeartMap } from "@/lib/hearts";
 import { parsePostForm, readPosts, writePosts } from "@/lib/store";
 import type { Post } from "@/lib/posts";
 
 export type FormState = { error?: string; ok?: boolean } | null;
 export type SubscribeState = { error?: string; ok?: boolean } | null;
+export type HeartState = { count: number; hearted: boolean } | { error: string };
 
 async function requireAdmin(): Promise<FormState | null> {
   if (await isAdmin()) return null;
@@ -124,4 +127,31 @@ export async function removeEmail(_prev: FormState, formData: FormData): Promise
   }
   revalidatePath("/admin");
   return { ok: true };
+}
+
+export async function toggleHeart(postId: string): Promise<HeartState> {
+  if (!/^[0-9a-f-]{36}$/i.test(postId)) return { error: "That note is gone." };
+  const posts = await readPosts();
+  if (!posts.some((post) => post.id === postId)) return { error: "That note is gone." };
+
+  const mine = await ensureVisitorId();
+  const hearts = await readHeartMap();
+  const visitors = new Set(hearts[postId] ?? []);
+  const hearted = !visitors.has(mine);
+  if (hearted) visitors.add(mine);
+  else visitors.delete(mine);
+
+  if (visitors.size > 0) hearts[postId] = [...visitors];
+  else delete hearts[postId];
+
+  try {
+    await writeHeartMap(hearts);
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "The heart could not be saved.",
+    };
+  }
+  updateTag("hearts");
+  revalidatePath("/");
+  return { count: visitors.size, hearted };
 }

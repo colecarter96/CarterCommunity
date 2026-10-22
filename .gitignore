@@ -33,8 +33,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
-# private email signups
+# private email signups and anonymous hearts
 /data/emails.json
+/data/hearts.json
 
 # vercel
 .vercel

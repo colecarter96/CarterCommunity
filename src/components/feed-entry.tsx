@@ -1,9 +1,18 @@
+import { HeartButton } from "@/components/heart-button";
 import { postFontFamily } from "@/lib/fonts";
 import { formatStamp } from "@/lib/format";
 import { parseNote } from "@/lib/note";
 import type { Post } from "@/lib/posts";
 
-export function FeedEntry({ post }: { post: Post }) {
+export function FeedEntry({
+  post,
+  heartCount,
+  hearted,
+}: {
+  post: Post;
+  heartCount: number;
+  hearted: boolean;
+}) {
   const { parts, links } = parseNote(post.body);
   const visible = parts.map((part) => (part.kind === "text" ? part.text : part.label)).join("");
   const short = visible.length <= 180;
@@ -44,6 +53,7 @@ export function FeedEntry({ post }: { post: Post }) {
           ),
         )}
       </p>
+      <HeartButton postId={post.id} count={heartCount} hearted={hearted} />
       {links.length > 0 ? (
         <ul className="mt-6 max-w-xl border-t border-line">
           {links.map((link) => (

@@ -1,4 +1,4 @@
-import { FeedEntry } from "@/components/feed-entry";
+import { Feed } from "@/components/feed";
 import { getPosts } from "@/lib/get-posts";
 import { shell, site } from "@/lib/site";
 
@@ -16,17 +16,7 @@ export default async function Page() {
         </div>
       </section>
       <section id="feed" className="scroll-mt-20" aria-label="Feed">
-        {posts.length === 0 ? (
-          <p className="py-14 text-sm text-muted">Nothing posted yet.</p>
-        ) : (
-          <ol>
-            {posts.map((post) => (
-              <li key={post.id}>
-                <FeedEntry post={post} />
-              </li>
-            ))}
-          </ol>
-        )}
+        <Feed posts={posts} />
       </section>
     </main>
   );
